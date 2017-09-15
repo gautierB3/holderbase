@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_head %}
+<style>
+
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.box {
+  font: 10px sans-serif;
+}
+
+.box line,
+.box rect,
+.box circle {
+  fill: steelblue;
+  stroke: #000;
+  stroke-width: 1px;
+}
+
+.box .center {
+  stroke-dasharray: 3,3;
+}
+
+.box .outlier {
+  fill: none;
+  stroke: #000;
+}
+
+.axis {
+  font: 12px sans-serif;
+}
+ 
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+ 
+.x.axis path { 
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+</style>
+
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="{% static 'box.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+
+    <main class="col-sm-12 ml-sm-auto col-md-12 pt-3" role="main">
+      <section class="row text-center placeholders">
+		  <div class="col-sm-4">
+		    <div class="card">
+		      <div class="card-body">
+		        <h4 class="card-title">{{ parties|length }} <small>Part{{ parties|pluralize:"y,ies" }}</small></h4>
+		        <p><a href="/pivot/">> Pivot</a></p>
+		      	<div id="partyChart"></div>
+		      </div>
+		    </div>
+		  </div>
+		  <div class="col-sm-4">
+		    <div class="card">
+		      <div class="card-body">
+		        <h4 class="card-title">{{ securities|length }} <small>Securit{{ securities|pluralize:"y,ies" }}</small></h4>
+		      </div>
+		    </div>
+		  </div>
+		  <div class="col-sm-4">
+		    <div class="card">
+		      <div class="card-body">
+		        <h4 class="card-title">{{ holdings|length }} <small>Holding{{ holdings|pluralize }}</small></h4>
+		        <p><a href="/graph/">> Graph</a>
+		        
+		      </div>
+		    </div>
+		  </div>
+      </section>
+	  {% if parties %}
+      <section>
+      <div class="row">
+        <h2>Parties</h2>
+      </div>
+    	 <div class="table-responsive">
+		  <table class="table">
+		    <tr>
+			    <th>Name</th>
+			    <th>Lei</th>
+			    <th>Holder role</th>
+			    <th>Sector/Industry</th>
+			    <th>Country</th>
+			  </tr>
+			  {% for party in parties %}
+			  <tr>
+			    <td>{{ party.name }}</td>
+			    <td>{{ party.lei }}</td>
+			    <td>{% if party.holder_role %}{{ party.holder_role }}{% else %}Unknown{% endif %}</td>
+			    <td>{% if party.sector_industry %}{{ party.sector_industry }}{% else %}Unknown{% endif %}</td>
+			    <td>{{ party.country }}</td>
+			  </tr>
+			  {% endfor %}
+		  </table>
+		</div>
+      </section>
+	  {% endif %}
+	  {% if securities %}
+      <section>
+        <div class="row">
+        	<h2>Securities</h2>
+      	</div>
+    	 <div class="table-responsive">
+		  <table class="table">
+		    <tr>
+			    <th>ISIN</th>
+			    <th>Issuer</th>
+			  </tr>
+			  {% for security in securities %}
+			  <tr>
+			    <td><a href="/security/{{ security.pk }}/">{{ security.isin }}</td>
+			    <td>{% if security.issuer %}{{ security.issuer }}{% else %}Unknown{% endif %}</td>
+			  </tr>
+			  {% endfor %}
+		  </table>
+		</div>
+      </section>
+	  {% endif %}
+	  {% if holdings %}
+      <section>
+        <div class="row">
+        <h2>Holdings</h2>
+      </div>
+    	 <div class="table-responsive">
+		  <table class="table">
+		    <tr>
+			    <th>Link</th>
+			    <th>Security</th>
+			    <th>Amount</th>
+			    <th>Currency</th>
+			  </tr>
+			  {% for holding in holdings %}
+			  <tr>
+			    <td>{% if holding.relation_type == "200" or holding.relation_type == '800' %}{{ holding.party_to }} - {{ holding.party_from }}
+			    	{% else %}{{ holding.party_from }} - {{ holding.party_to }}{% endif %}</td>
+			    <td>{{ holding.security.isin }}</td>
+			    <td>{{ holding.amount }}</td>
+			    <td>{{ holding.currency }}</td>
+			  </tr>
+			  {% endfor %}
+		  </table>
+		</div>
+      </section>
+	  {% endif %}
+    </main>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+
+{% endblock %}

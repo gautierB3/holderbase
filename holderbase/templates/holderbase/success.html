@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Success{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <main class="col-sm-12 ml-sm-auto col-md-12 pt-3" role="main">
+  <p>{% if created %}
+    {{ created|length }} new holding{{ created|pluralize }}.
+  {% else %}
+    No new holding found.
+  {% endif %}
+  {% if updated %}
+    {{ updated|length }} updated holding{{ updated|pluralize }}.
+  {% else %}
+    No holding updated.
+  {% endif %}
+  {% if removed %}
+    {{ removed|length }} deleted holding{{ removed|pluralize }}.
+  {% else %}
+    No holding removed.
+  {% endif %}</p>
+<hr>
+<p>Back to the <a href="/">index</a>.
+
+</main>
+</div>
+</div>
+{% endblock %}
