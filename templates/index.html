@@ -1,55 +1,25 @@
 {% extends "base.html" %}
 {% load static %}
-
 {% block extra_head %}
-<style>
+ <style>
 
-body {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-}
-
-.box {
-  font: 10px sans-serif;
+.link {
+  stroke: #aaa;
 }
 
-.box line,
-.box rect,
-.box circle {
-  fill: steelblue;
-  stroke: #000;
-  stroke-width: 1px;
+.node text {
+stroke:#333;
+cursos:pointer;
 }
 
-.box .center {
-  stroke-dasharray: 3,3;
-}
-
-.box .outlier {
-  fill: none;
-  stroke: #000;
-}
-
-.axis {
-  font: 12px sans-serif;
-}
- 
-.axis path,
-.axis line {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
-}
- 
-.x.axis path { 
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
+.node circle{
+stroke:#fff;
+stroke-width:3px;
+fill:#555;
 }
 
 </style>
 
-<script src="http://d3js.org/d3.v3.min.js"></script>
-<script src="{% static 'box.js' %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -57,7 +27,7 @@ body {
   <div class="row">
 
     <main class="col-sm-12 ml-sm-auto col-md-12 pt-3" role="main">
-      <section class="row text-center placeholders">
+      <section id="main" class="row text-center placeholders">
 		  <div class="col-sm-4">
 		    <div class="card">
 		      <div class="card-body">
@@ -78,10 +48,11 @@ body {
 		    <div class="card">
 		      <div class="card-body">
 		        <h4 class="card-title">{{ holdings|length }} <small>Holding{{ holdings|pluralize }}</small></h4>
-		        <p><a href="/graph/">> Graph</a>
-		        
 		      </div>
 		    </div>
+		  </div>
+		  <div class="col-sm-12">
+		  	<svg width="1200" height="400"></svg>
 		  </div>
       </section>
 	  {% if parties %}
@@ -164,5 +135,53 @@ body {
 {% endblock %}
 
 {% block extra_js %}
+<script src="http://d3js.org/d3.v2.min.js?2.9.3"></script>
+<script>
+var width = 900,
+    height = 400
 
+var svg = d3.select("svg");
+
+var force = d3.layout.force()
+    .gravity(0)
+    .distance(130)
+    .charge(-10)
+    .size([width/2, height/2]);
+
+d3.json("/get/holding/graph/", function(json) {
+  force
+      .nodes(json.nodes)
+      .links(json.links)
+      .start();
+
+  var link = svg.selectAll(".link")
+      .data(json.links)
+    .enter().append("line")
+      .attr("class", "link")
+    .style("stroke-width", function(d) { return Math.sqrt(d.weight); });
+
+  var node = svg.selectAll(".node")
+      .data(json.nodes)
+    .enter().append("g")
+      .attr("class", "node")
+      .call(force.drag);
+
+  node.append("circle")
+      .attr("r","5");
+
+  node.append("text")
+      .attr("dx", 12)
+      .attr("dy", ".35em")
+      .text(function(d) { return d.name });
+
+  force.on("tick", function() {
+    link.attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+
+    node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+  });
+});
+</script>
 {% endblock %}
