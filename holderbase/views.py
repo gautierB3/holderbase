@@ -88,7 +88,7 @@ def index(request):
         created, updated, removed = Holding.check_for_updates(sender, hash, timestamp)
         return render(request, 'holderbase/success.html', {"created":created, "updated":updated, "removed":removed})
     context = {"parties":Party.objects.all(), "securities":Security.objects.all(), "holdings":Holding.objects.all()}
-    return render(request, 'index.html', context)
+    return render(request, 'holderbase/index.html', context)
 
 
 # Used on the index

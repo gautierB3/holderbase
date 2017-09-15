@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% load static %}
+{% block extra_head %}
+ <style>
+
+.link {
+  stroke: #aaa;
+}
+
+.node text {
+stroke:#333;
+cursos:pointer;
+}
+
+.node circle{
+stroke:#fff;
+stroke-width:3px;
+fill:#555;
+}
+
+</style>
+
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+
+    <main class="col-sm-12 ml-sm-auto col-md-12 pt-3" role="main">
+      <section id="main" class="row text-center placeholders">
+		  <div class="col-sm-4">
+		    <div class="card">
+		      <div class="card-body">
+		        <h4 class="card-title">{{ parties|length }} <small>Part{{ parties|pluralize:"y,ies" }}</small></h4>
+		        <p><a href="/pivot/">> Pivot</a></p>
+		      	<div id="partyChart"></div>
+		      </div>
+		    </div>
+		  </div>
+		  <div class="col-sm-4">
+		    <div class="card">
+		      <div class="card-body">
+		        <h4 class="card-title">{{ securities|length }} <small>Securit{{ securities|pluralize:"y,ies" }}</small></h4>
+		      </div>
+		    </div>
+		  </div>
+		  <div class="col-sm-4">
+		    <div class="card">
+		      <div class="card-body">
+		        <h4 class="card-title">{{ holdings|length }} <small>Holding{{ holdings|pluralize }}</small></h4>
+		      </div>
+		    </div>
+		  </div>
+		  <div class="col-sm-12">
+		  	<svg width="1200" height="400"></svg>
+		  </div>
+      </section>
+	  {% if parties %}
+      <section>
+      <div class="row">
+        <h2>Parties</h2>
+      </div>
+    	 <div class="table-responsive">
+		  <table class="table">
+		    <tr>
+			    <th>Name</th>
+			    <th>Lei</th>
+			    <th>Holder role</th>
+			    <th>Sector/Industry</th>
+			    <th>Country</th>
+			  </tr>
+			  {% for party in parties %}
+			  <tr>
+			    <td>{{ party.name }}</td>
+			    <td>{{ party.lei }}</td>
+			    <td>{% if party.holder_role %}{{ party.holder_role }}{% else %}Unknown{% endif %}</td>
+			    <td>{% if party.sector_industry %}{{ party.sector_industry }}{% else %}Unknown{% endif %}</td>
+			    <td>{{ party.country }}</td>
+			  </tr>
+			  {% endfor %}
+		  </table>
+		</div>
+      </section>
+	  {% endif %}
+	  {% if securities %}
+      <section>
+        <div class="row">
+        	<h2>Securities</h2>
+      	</div>
+    	 <div class="table-responsive">
+		  <table class="table">
+		    <tr>
+			    <th>ISIN</th>
+			    <th>Issuer</th>
+			  </tr>
+			  {% for security in securities %}
+			  <tr>
+			    <td><a href="/security/{{ security.pk }}/">{{ security.isin }}</td>
+			    <td>{% if security.issuer %}{{ security.issuer }}{% else %}Unknown{% endif %}</td>
+			  </tr>
+			  {% endfor %}
+		  </table>
+		</div>
+      </section>
+	  {% endif %}
+	  {% if holdings %}
+      <section>
+        <div class="row">
+        <h2>Holdings</h2>
+      </div>
+    	 <div class="table-responsive">
+		  <table class="table">
+		    <tr>
+			    <th>Link</th>
+			    <th>Security</th>
+			    <th>Amount</th>
+			    <th>Currency</th>
+			  </tr>
+			  {% for holding in holdings %}
+			  <tr>
+			    <td>{% if holding.relation_type == "200" or holding.relation_type == '800' %}{{ holding.party_to }} - {{ holding.party_from }}
+			    	{% else %}{{ holding.party_from }} - {{ holding.party_to }}{% endif %}</td>
+			    <td>{{ holding.security.isin }}</td>
+			    <td>{{ holding.amount }}</td>
+			    <td>{{ holding.currency }}</td>
+			  </tr>
+			  {% endfor %}
+		  </table>
+		</div>
+      </section>
+	  {% endif %}
+    </main>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="http://d3js.org/d3.v2.min.js?2.9.3"></script>
+<script>
+var width = 900,
+    height = 400
+
+var svg = d3.select("svg");
+
+var force = d3.layout.force()
+    .gravity(0)
+    .distance(130)
+    .charge(-10)
+    .size([width/2, height/2]);
+
+d3.json("/get/holding/graph/", function(json) {
+  force
+      .nodes(json.nodes)
+      .links(json.links)
+      .start();
+
+  var link = svg.selectAll(".link")
+      .data(json.links)
+    .enter().append("line")
+      .attr("class", "link")
+    .style("stroke-width", function(d) { return Math.sqrt(d.weight); });
+
+  var node = svg.selectAll(".node")
+      .data(json.nodes)
+    .enter().append("g")
+      .attr("class", "node")
+      .call(force.drag);
+
+  node.append("circle")
+      .attr("r","5");
+
+  node.append("text")
+      .attr("dx", 12)
+      .attr("dy", ".35em")
+      .text(function(d) { return d.name });
+
+  force.on("tick", function() {
+    link.attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+
+    node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+  });
+});
+</script>
+{% endblock %}
