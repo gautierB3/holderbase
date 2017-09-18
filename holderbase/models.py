@@ -410,7 +410,7 @@ class Holding(models.Model):
         print(set(parties))
         for party in set(parties):
             obj = Party.objects.get(pk=party)
-            graphdata['nodes'].append({'id':obj.id, 'name':obj.name,'group':obj.holder_role})
+            graphdata['nodes'].append({'id':obj.id, 'name':obj.name,'group':obj.holder_role or "Other"})
         return graphdata
 
     # used for the global graph: /graph/

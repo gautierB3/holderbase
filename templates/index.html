@@ -3,20 +3,15 @@
 {% block extra_head %}
  <style>
 
-.link {
-  stroke: #aaa;
-}
+      .link {
+        fill: none;
+        stroke: #000;
+        stroke-opacity: .2;
+      }
 
-.node text {
-stroke:#333;
-cursos:pointer;
-}
-
-.node circle{
-stroke:#fff;
-stroke-width:3px;
-fill:#555;
-}
+      .link:hover {
+        stroke-opacity: .5;
+      }
 
 </style>
 
@@ -51,12 +46,10 @@ fill:#555;
 		      </div>
 		    </div>
 		  </div>
-		  <div class="col-sm-12">
-		  	<svg width="1200" height="400"></svg>
-		  </div>
+		  <div id="graph" class="col-sm-12"></div>
       </section>
 	  {% if parties %}
-      <section>
+      <section id="parties">
       <div class="row">
         <h2>Parties</h2>
       </div>
@@ -83,7 +76,7 @@ fill:#555;
       </section>
 	  {% endif %}
 	  {% if securities %}
-      <section>
+      <section id="securities">
         <div class="row">
         	<h2>Securities</h2>
       	</div>
@@ -92,11 +85,14 @@ fill:#555;
 		    <tr>
 			    <th>ISIN</th>
 			    <th>Issuer</th>
+			    <th></th>
 			  </tr>
 			  {% for security in securities %}
 			  <tr>
-			    <td><a href="/security/{{ security.pk }}/">{{ security.isin }}</td>
+			    <td>{{ security.isin }}</td>
 			    <td>{% if security.issuer %}{{ security.issuer }}{% else %}Unknown{% endif %}</td>
+			    <td><a href="/custodian/{{ security.pk }}/" class="btn btn-outline-primary btn-sm"  role="button">Custodian report</a>
+			    <a href="/issuer/{{ security.pk }}/" class="btn btn-outline-success btn-sm"  role="button">Issuer report</a></td>
 			  </tr>
 			  {% endfor %}
 		  </table>
@@ -104,7 +100,7 @@ fill:#555;
       </section>
 	  {% endif %}
 	  {% if holdings %}
-      <section>
+      <section id="holdings">
         <div class="row">
         <h2>Holdings</h2>
       </div>
@@ -135,44 +131,68 @@ fill:#555;
 {% endblock %}
 
 {% block extra_js %}
-<script src="http://d3js.org/d3.v2.min.js?2.9.3"></script>
+<script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
-var width = 900,
-    height = 400
+var units = "Widgets";
 
-var svg = d3.select("svg");
+var margin = {top: 10, right: 10, bottom: 10, left: 10},
+    width = 1110 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
 
+var formatNumber = d3.format(",.0f"),    // zero decimal places
+    format = function(d) { return formatNumber(d) + " " + units; },
+    color = d3.scale.category20(),
+    sankeycolor = d3.scale.category20();
+
+
+////////////////////
+// Directed graph //
+////////////////////
 var force = d3.layout.force()
-    .gravity(0)
-    .distance(130)
-    .charge(-10)
-    .size([width/2, height/2]);
+    .charge(-120)
+    .linkDistance(100)
+    .size([width, height]);
 
-d3.json("/get/holding/graph/", function(json) {
+
+var graphsvg = d3.select("#graph").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+
+d3.json("/get/holding/graph/", function(error, graph) {
+  if (error) throw error;
+
   force
-      .nodes(json.nodes)
-      .links(json.links)
+      .nodes(graph.nodes)
+      .links(graph.links)
       .start();
 
-  var link = svg.selectAll(".link")
-      .data(json.links)
+
+
+  var link = graphsvg.selectAll(".link")
+      .data(graph.links)
     .enter().append("line")
       .attr("class", "link")
-    .style("stroke-width", function(d) { return Math.sqrt(d.weight); });
+      .style("stroke-width", 2);
+      //.style("stroke-width", function(d) { return Math.sqrt(d.value); });
 
-  var node = svg.selectAll(".node")
-      .data(json.nodes)
-    .enter().append("g")
+  // add the link titles
+  link.append("title")
+        .text(function(d) {
+        return d.source.name + " → " + 
+                d.target.name + "\n" + format(d.amount); });
+
+  var node = graphsvg.selectAll(".node")
+      .data(graph.nodes)
+    .enter().append("circle")
       .attr("class", "node")
+      .attr("r", 10)
+      .style("fill", function(d) { return color(d.group); })
       .call(force.drag);
 
-  node.append("circle")
-      .attr("r","5");
 
-  node.append("text")
-      .attr("dx", 12)
-      .attr("dy", ".35em")
-      .text(function(d) { return d.name });
+  node.append("title")
+      .text(function(d) { return d.name; });
 
   force.on("tick", function() {
     link.attr("x1", function(d) { return d.source.x; })
@@ -180,8 +200,35 @@ d3.json("/get/holding/graph/", function(json) {
         .attr("x2", function(d) { return d.target.x; })
         .attr("y2", function(d) { return d.target.y; });
 
-    node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+    node.attr("cx", function(d) { return d.x; })
+        .attr("cy", function(d) { return d.y; });
   });
+
+ verticalLegend = d3.svg.legend()
+   .labelFormat("none").cellPadding(5)
+   .orientation("vertical")
+   .units("Role")
+   .cellWidth(25)
+   .cellHeight(18)
+   .inputScale(color)
+   .cellStepping(10);
+
+  graphsvg.append("g")
+    .attr("transform", "translate(50,140)")
+    .attr("class", "legend")
+    .call(verticalLegend);
 });
+
+function mouseover() {
+  d3.select(this).select("circle").transition()
+  .duration(350)
+  .attr("r", 20);
+}
+
+function mouseout() {
+  d3.select(this).select("circle").transition()
+  .duration(350)
+  .attr("r" , 15);
+}
 </script>
 {% endblock %}

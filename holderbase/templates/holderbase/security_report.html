@@ -12,14 +12,7 @@
 {% block content %}  
   
    <div id="main" class="container">
-      <h1 style="padding-top: 10px;">Security interactive report: {{ obj.isin }}</h1>
-      <div class="row">
-        <div class="col-sm-12">
-            <h3 style="padding-top: 10px;">Security Graph</h3>
-            <svg class="graph" width="600" height="400"></svg>
-        </div>
-        <hr>
-      </div>
+      <h1 style="padding-top: 10px;">CSD Benchmark on security {{ obj.isin }}</h1>
       <div class="row">
          <div class="col-sm-12">
           <h3 style="text-align: center;">Security holdings grouped by holders with direct holding with a CSD.<br><small>Colors denoting the source CSD.</small></h3>
@@ -48,89 +41,7 @@
   <script src="https://d3js.org/d3.v4.min.js"></script>
   <script src="{% static 'd3-tip.js' %}"></script>
   <script type="text/javascript">
-  // If you want an event to work on your page, 
-  // you should call it inside the $(document).ready()
-  
-    // load everything you can before the data so the page do not move once data is loaded
-    var margin = {top: 20, right: 20, bottom: 70, left: 100},
-        width = $("#main").width() - margin.left - margin.right,
-        height = 500 - margin.top - margin.bottom;
 
-    // graph //////////////////////////////////////////////
-    var graphSvg = d3.select(".graph");
-
-    var color = d3.scaleOrdinal(d3.schemeCategory20);
-
-    var simulation = d3.forceSimulation()
-      .force("link", d3.forceLink().distance(100).id(function(d) { return d.id; }))
-      .force("charge", d3.forceManyBody())
-      .force("center", d3.forceCenter(width / 4, height / 2));
-
-
-    d3.json("/get/graph/security/{{ pk }}", function(error, graph) {
-      if (error) throw error;
-
-      //console.log(graph);
-      var link = graphSvg.append("g")
-        .attr("class", "links")
-        .selectAll("line")
-        .data(graph.links)
-        .enter().append("line");
-        //.attr("stroke-width", function(d) { return Math.sqrt(d.amount); });
-
-      var node = graphSvg.append("g")
-        .attr("class", "nodes")
-        .selectAll("circle")
-        .data(graph.nodes)
-        .enter().append("circle")
-        .attr("r", 10)
-        .attr("fill", function(d) { return color(d.group); })
-        .call(d3.drag()
-          .on("start", dragstarted)
-          .on("drag", dragged)
-          .on("end", dragended));
-
-      node.append("title")
-        .text(function(d) { return d.name; });
-
-      simulation
-        .nodes(graph.nodes)
-        .on("tick", ticked);
-
-      simulation.force("link")
-        .links(graph.links);
-
-      function ticked() {
-        link
-          .attr("x1", function(d) { return d.source.x; })
-          .attr("y1", function(d) { return d.source.y; })
-          .attr("x2", function(d) { return d.target.x; })
-          .attr("y2", function(d) { return d.target.y; });
-
-        node
-          .attr("cx", function(d) { return d.x; })
-          .attr("cy", function(d) { return d.y; });
-      }
-
-
-    });
-
-    function dragstarted(d) {
-      if (!d3.event.active) simulation.alphaTarget(0.3).restart();
-      d.fx = d.x;
-      d.fy = d.y;
-    }
-
-    function dragged(d) {
-      d.fx = d3.event.x;
-      d.fy = d3.event.y;
-    }
-
-    function dragended(d) {
-      if (!d3.event.active) simulation.alphaTarget(0);
-      d.fx = null;
-      d.fy = null;
-    }  
        
   
 
@@ -414,7 +325,7 @@
     // Third chart
     var dataset = [];
       for (obj in data) {
-        if (data[obj]['role_source'] == 'CSD' && !(data[obj]['role_target'] == 'PPP')) {
+        if (data[obj]['role_source'] == 'CUS' && !(data[obj]['role_target'] == 'PPP')) {
           dataset.push(data[obj]);
         };
       };

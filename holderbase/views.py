@@ -88,7 +88,7 @@ def index(request):
         created, updated, removed = Holding.check_for_updates(sender, hash, timestamp)
         return render(request, 'holderbase/success.html', {"created":created, "updated":updated, "removed":removed})
     context = {"parties":Party.objects.all(), "securities":Security.objects.all(), "holdings":Holding.objects.all()}
-    return render(request, 'holderbase/index.html', context)
+    return render(request, 'index.html', context)
 
 
 # Used on the index
@@ -121,6 +121,34 @@ def security_report(request, pk):
     obj = Security.objects.get(pk=pk)
     context = {'pk':pk, 'obj':obj}
     return render(request, template, context)
+
+def issuer_report(request, pk):
+    template = "holderbase/issuer_report.html"
+    # security = {
+    #     'count':Holding.count_holdings(security=pk),
+    #     'total':Holding.total_holdings(security=pk),
+    #     'mean':Holding.avg_holdings(security=pk),
+    #     'var':Holding.var_holdings(security=pk),
+    #     'stdev':Holding.stddev_holdings(security=pk)
+    # }
+    obj = Security.objects.get(pk=pk)
+    context = {'pk':pk, 'obj':obj}
+    return render(request, template, context)
+
+
+def get_indexed_graph(request, pk):
+    return JsonResponse(Holding.get_indexed_graph_dict(security=pk), safe=False)
+
+
+def get_sankey(request, pk):
+    data = Holding.get_indexed_graph_dict(security=pk)
+    for i in range(len(data['nodes'])):
+        data['nodes'][i]['id'] = i
+    for item in data['links']:
+        item['value'] = item['amount']
+        if item['source'] == item['target']:
+            data['links'].remove(item)
+    return JsonResponse(data, safe=False)
 
 
 # def get_security_holdings(request, pk):

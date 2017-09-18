@@ -118,9 +118,7 @@ d3.sankey = function() {
         node.x = x;
         node.dx = nodeWidth;
         node.sourceLinks.forEach(function(link) {
-          if (nextNodes.indexOf(link.target) < 0) {
-            nextNodes.push(link.target);
-          }
+          nextNodes.push(link.target);
         });
       });
       remainingNodes = nextNodes;
@@ -129,7 +127,7 @@ d3.sankey = function() {
 
     //
     moveSinksRight(x);
-    scaleNodeBreadths((size[0] - nodeWidth) / (x - 1));
+    scaleNodeBreadths((width - nodeWidth) / (x - 1));
   }
 
   function moveSourcesRight() {

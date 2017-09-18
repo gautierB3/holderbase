@@ -7,9 +7,12 @@ urlpatterns = [
     url(r'^$', views.index, name='index'),
     #url(r'^graph/$', TemplateView.as_view(template_name="holderbase/graph.html")),
     url(r'^pivot/$', TemplateView.as_view(template_name="holderbase/pivot.html")),
-    url(r'^security/(?P<pk>\d+)/$', views.security_report),#security report view
+    url(r'^custodian/(?P<pk>\d+)/$', views.security_report),#security report view
+    url(r'^issuer/(?P<pk>\d+)/$', views.issuer_report),#security report view
     # ajax calls
     url(r'^get/party/observations/$', views.party_pivot),# used by pivot
+    url(r'^get/graph/indexed/(?P<pk>\d+)/$', views.get_indexed_graph),#used in security report for graph
+    url(r'^get/sankey/(?P<pk>\d+)/$', views.get_sankey),#used in security report for graph
     url(r'^get/graph/security/(?P<pk>\d+)/$', views.get_security_graph),#used in security report for graph
     url(r'^get/holdings/(?P<pk>\d+)/$', views.get_full_data),#used in security report for second and third chart
     url(r'^get/holding/graph/$', views.get_holding_graph),#used by /graph/

@@ -157,16 +157,11 @@ def get_file_extension(filename):
 
 
 
-
-
-
-
-
 def translate_type(holder_type):
     """
     Ensures type mentionned in file corresponds to type expected in database.
     """
-    if holder_type == 'custodian':
+    if holder_type == 'custodian' or 'Custodian':
         return 'CUS'
     elif holder_type == 'issuer':
         return 'ISS'
@@ -181,7 +176,7 @@ def create_or_update_sender(row, hash):
         defaults = {
             'lei': row['lei'], 
             "name":row['name'], 
-            "holder_role":translate_type(row['type']), 
+            "holder_role":translate_type(row['type'].lower()), 
             "country":row['country'], 
             "sector_industry":row['sector/industry'],
             "last_file_hash":hash}
