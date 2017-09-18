@@ -25,7 +25,7 @@ SECRET_KEY = os.environ['SECRET_KEY']
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['base3holderbase.pythonanywhere.com', 'holderbase.com']
+ALLOWED_HOSTS = ['base3holderbase.pythonanywhere.com', 'gautierb3.pythonanywhere.com', 'holderbase.com']
 
 
 # Application definition
