@@ -1,3 +1,4 @@
+import os
 import decimal
 import json
 import math
@@ -5,8 +6,10 @@ import statistics
 
 from pandas import DataFrame
 
+from django.conf import settings
 from django.core import serializers
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
 
 from django_countries.fields import CountryField
@@ -34,6 +37,11 @@ from django_countries.fields import CountryField
 #             params={'value':value},
 #         )
 
+def most_common(lst):
+    if len(lst) < 1:
+        return None
+    else:
+        return max(set(lst), key=lst.count)
 
 
 class Party(models.Model):
@@ -42,6 +50,7 @@ class Party(models.Model):
         ('ISS', 'Issuer'),
         ('CSD', 'Depository'),
         ('CUS', 'Custodian'),
+        ('OWN', 'Beneficial Owner'),
         ('PPP', 'Physical Private Person'),
     )
 
@@ -93,6 +102,29 @@ class Party(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def get_role(self):
+        if not self.holder_role:
+            out_holdings = Holding.objects.filter(Q(party_to=self) & (Q(relation_type='300')|Q(relation_type='350')|Q(relation_type='400')))
+            in_holdings = Holding.objects.filter(Q(party_to=self) & (Q(relation_type='200')|Q(relation_type='800')))
+            role_source = []
+            role_target = []
+            for holding in out_holdings:
+                role_source.append(holding.party_from.holder_role)
+            for holding in in_holdings:
+                role_target.append(holding.party_from.holder_role)
+            if most_common(role_source) == "ISS" or most_common(role_target) == "CUS":
+                return "CSD"
+            elif most_common(role_source) == "CSD" or most_common(role_target) == "OWN":
+                return "CUS"
+            elif most_common(role_source) == "CUS":
+                return "OWN"
+            elif most_common(role_target) == "CSD":
+                return "ISS"
+        else:
+            return self.holder_role
+
 
     #Used for the pivot
     @classmethod
@@ -276,6 +308,7 @@ class Holding(models.Model):
         if self.currency == "EUR":
             return  self.amount * decimal.Decimal(1.18821).quantize(decimal.Decimal("0.01"), decimal.ROUND_HALF_UP)
 
+
     # @classmethod
     # def total_holdings(cls, security):
     #     return decimal.Decimal(cls.objects.filter(security=security).aggregate(models.Sum('amount'))["amount__sum"])
@@ -389,7 +422,7 @@ class Holding(models.Model):
         for obj in holdings:
             parties.append(obj.party_from.id)
             parties.append(obj.party_to.id)
-            if obj.relation_type == '200' or '800':
+            if obj.relation_type == '200' or obj.relation_type == '800':
                 graphdata['links'].append({
                     "source":obj.party_to.id, 
                     "target":obj.party_from.id, 
@@ -410,7 +443,7 @@ class Holding(models.Model):
         print(set(parties))
         for party in set(parties):
             obj = Party.objects.get(pk=party)
-            graphdata['nodes'].append({'id':obj.id, 'name':obj.name,'group':obj.holder_role or "Other"})
+            graphdata['nodes'].append({'id':obj.id, 'name':obj.name,'group':obj.get_role})
         return graphdata
 
     # used for the global graph: /graph/
@@ -428,6 +461,9 @@ class Holding(models.Model):
                     link['target'] = nodes.index(node)
                 if node['id'] == link['source']:
                     link['source'] = nodes.index(node)
+
+        for node in nodes:
+            node['id'] = nodes.index(node)
         return dict({"nodes":nodes,"links":links})
 
 
@@ -453,8 +489,8 @@ class Holding(models.Model):
                     'source':holding.party_to.name,
                     'target':holding.party_from.name,
                     'security':holding.security.isin,
-                    'role_source':holding.party_to.holder_role or "Other",
-                    'role_target':holding.party_from.holder_role or "Other",
+                    'role_source':holding.party_to.get_role,
+                    'role_target':holding.party_from.get_role,
                     'country_source':holding.party_to.country.name or "Other",
                     'country_target':holding.party_from.country.name or "Other",
                     'currency':holding.currency,
@@ -471,8 +507,8 @@ class Holding(models.Model):
                     'source':holding.party_from.name,
                     'target':holding.party_to.name,
                     'security':holding.security.isin,
-                    'role_source':holding.party_from.holder_role or "Other",
-                    'role_target':holding.party_to.holder_role or "Other",
+                    'role_source':holding.party_from.get_role,
+                    'role_target':holding.party_to.get_role,
                     'country_source':holding.party_from.country.name or "Other",
                     'country_target':holding.party_to.country.name or "Other",
                     'currency':holding.currency,
@@ -486,3 +522,9 @@ class Holding(models.Model):
                 })
 
         return data
+
+    @classmethod
+    def dump_full_table(cls, filename="dumps/full.json"):
+        data = cls.get_full_table()
+        with open(os.path.join(settings.MEDIA_ROOT, filename),"w") as f:
+            json.dump(data, f,  cls=serializers.json.DjangoJSONEncoder)

@@ -31,6 +31,12 @@
         stroke-opacity: .5;
       }
 
+      .suit{
+        stroke-width:5;
+        stroke:#000;
+        stroke-dasharray:5, 5;
+      }
+
       .legend rect {
         stroke:white !important;
         opacity:0.8;}
@@ -48,7 +54,7 @@
    <div id="main" class="container">
       <h1 style="padding-top: 10px;">Security interactive report: {{ obj.isin }}</h1>
       <div class="row">
-        <div id="graph" class="col-sm-12">
+        <div id="graph" class="col-sm-6">
             <h3 style="padding-top: 10px;">Security Graph</h3>
         </div>
         
@@ -58,6 +64,9 @@
          <hr>
             <h3 style="padding-top: 10px;">Sankey plot</h3>
           </div>
+          <div class="col-md-12">
+          <hr>
+           <p>The x position on the sankey is determined as such: nodes are assigned the maximum breadth of incoming neighbors plus one; nodes with no incoming links are assigned breadth zero, while nodes with no outgoing links are assigned the maximum breadth.<p>
       </div>
       <div height="50" class="row">
 
@@ -76,10 +85,10 @@
   {% block extra_js %}
   <script src="http://d3js.org/d3.v3.min.js"></script>
   <script src="{% static 'sankey.js' %}"></script>
-  <script src="{% static 'legend.js' %}" type="text/JavaScript"></script>
+  <script src="{% static 'legend.js' %}"></script>
   <script>
 
-var units = "Widgets";
+var units = "Millions";
 
 var margin = {top: 10, right: 10, bottom: 10, left: 10},
     width = 1110 - margin.left - margin.right,
@@ -119,7 +128,8 @@ d3.json("/get/graph/indexed/{{ pk }}", function(error, graph) {
       .data(graph.links)
     .enter().append("line")
       .attr("class", "link")
-      .style("stroke-width", 1);
+      .style("stroke-width", 1)
+      .style("marker-end",  "url(#suit)") // Modified line;
       //.style("stroke-width", function(d) { return Math.sqrt(d.value); });
 
   // add the link titles
@@ -163,6 +173,22 @@ d3.json("/get/graph/indexed/{{ pk }}", function(error, graph) {
     .attr("transform", "translate(50,140)")
     .attr("class", "legend")
     .call(verticalLegend);
+
+
+  graphsvg.append("defs").selectAll("marker")
+    .data(["suit", "licensing", "resolved"])
+  .enter().append("marker")
+    .attr("id", function(d) { return d; })
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 25)
+    .attr("refY", 0)
+    .attr("markerWidth", 6)
+    .attr("markerHeight", 6)
+    .attr("orient", "auto")
+  .append("path")
+    .attr("d", "M0,-5L10,0L0,5 L10,0 L0, -5")
+    .style("stroke", "#4679BD")
+    .style("opacity", "0.6");
 });
 
 function mouseover() {
@@ -191,7 +217,7 @@ var svg = d3.select("#chart").append("svg")
 // Set the sankey diagram properties
 var sankey = d3.sankey()
     .nodeWidth(36)
-    .nodePadding(40)
+    .nodePadding(48)
     .size([width, height]);
 
 var path = sankey.link();
@@ -269,6 +295,8 @@ d3.json("/get/sankey/{{ pk }}", function(error, graph) {
     sankeylink.attr("d", path);
   }
 });
+
+
         
 
 

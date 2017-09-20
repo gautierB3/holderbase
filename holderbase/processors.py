@@ -161,11 +161,11 @@ def translate_type(holder_type):
     """
     Ensures type mentionned in file corresponds to type expected in database.
     """
-    if holder_type == 'custodian' or 'Custodian':
+    if holder_type == 'custodian' or holder_type == 'cus':
         return 'CUS'
-    elif holder_type == 'issuer':
+    elif holder_type == 'issuer' or holder_type == 'iss':
         return 'ISS'
-    elif holder_type == 'depository' or 'csd':
+    elif holder_type == 'depository' or holder_type == 'csd':
         return 'CSD'
     else:
         return None

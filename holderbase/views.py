@@ -142,8 +142,32 @@ def get_indexed_graph(request, pk):
 
 def get_sankey(request, pk):
     data = Holding.get_indexed_graph_dict(security=pk)
-    for i in range(len(data['nodes'])):
-        data['nodes'][i]['id'] = i
+    # for node in data['nodes']:
+    #     if node['group'] == 'ISS':
+    #         node['xPos'] = 0
+    #     elif node['group'] == 'CSD':
+    #         node['xPos'] = .5
+    #     elif node['group'] == 'CUS':
+    #         node['xPos'] = 1
+    #     elif node['group'] == 'OWN':
+    #         node['xPos'] = 2
+    for item in data['links']:
+        item['value'] = item['amount']
+        if item['source'] == item['target']:
+            data['links'].remove(item)
+    return JsonResponse(data, safe=False)
+
+def get_full_sankey(request):
+    data = Holding.get_indexed_graph_dict()
+    #for node in data['nodes']:
+        # if node['group'] == 'ISS':
+        #     node['xPos'] = 0
+        # elif node['group'] == 'CSD':
+        #     node['xPos'] = 0.5
+        # elif node['group'] == 'CUS':
+        #     node['xPos'] = 1
+        # elif node['group'] == 'OWN':
+        #     node['xPos'] = 1
     for item in data['links']:
         item['value'] = item['amount']
         if item['source'] == item['target']:

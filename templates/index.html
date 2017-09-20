@@ -3,15 +3,16 @@
 {% block extra_head %}
  <style>
 
-      .link {
-        fill: none;
-        stroke: #000;
-        stroke-opacity: .2;
-      }
+.link {
+  fill: none;
+  stroke: #000;
+  stroke-opacity: .2;
+}
 
-      .link:hover {
-        stroke-opacity: .5;
-      }
+.link:hover {
+  stroke-opacity: .5;
+}
+
 
 </style>
 
@@ -25,33 +26,30 @@
       <section id="main" class="row text-center placeholders">
 		  <div class="col-sm-4">
 		    <div class="card">
-		      <div class="card-body">
-		        <h4 class="card-title">{{ parties|length }} <small>Part{{ parties|pluralize:"y,ies" }}</small></h4>
-		        <p><a href="/pivot/">> Pivot</a></p>
-		      	<div id="partyChart"></div>
-		      </div>
+          <h4 class="card-title">{{ parties|length }} <small>Part{{ parties|pluralize:"y,ies" }}</small></h4>
 		    </div>
-		  </div>
-		  <div class="col-sm-4">
-		    <div class="card">
-		      <div class="card-body">
-		        <h4 class="card-title">{{ securities|length }} <small>Securit{{ securities|pluralize:"y,ies" }}</small></h4>
-		      </div>
-		    </div>
-		  </div>
-		  <div class="col-sm-4">
-		    <div class="card">
-		      <div class="card-body">
-		        <h4 class="card-title">{{ holdings|length }} <small>Holding{{ holdings|pluralize }}</small></h4>
-		      </div>
-		    </div>
-		  </div>
-		  <div id="graph" class="col-sm-12"></div>
+      </div>
+      <div class="col-sm-4">
+        <div class="card"> 
+	        <h4 class="card-title">{{ securities|length }} <small>Securit{{ securities|pluralize:"y,ies" }}</small></h4>
+          </div>
+	    </div>
+      <div class="col-sm-4">
+        <div class="card">    
+         <h4 class="card-title">{{ holdings|length }} <small>Holding{{ holdings|pluralize }}</small></h4>
+         </div>
+      </div>
+      <div class="col-sm-4">
+        <div id="graph"></div>
+	    </div>
+      <div id="chart" class="col-sm-8">
+		    
+      </div>
       </section>
 	  {% if parties %}
       <section id="parties">
       <div class="row">
-        <h2>Parties</h2>
+        <h2>Parties <small><a href="/pivot/" class="btn btn-outline-info btn-sm">Pivot</a></small></h2>
       </div>
     	 <div class="table-responsive">
 		  <table class="table">
@@ -66,7 +64,7 @@
 			  <tr>
 			    <td>{{ party.name }}</td>
 			    <td>{{ party.lei }}</td>
-			    <td>{% if party.holder_role %}{{ party.holder_role }}{% else %}Unknown{% endif %}</td>
+			    <td>{{ party.get_role }}</td>
 			    <td>{% if party.sector_industry %}{{ party.sector_industry }}{% else %}Unknown{% endif %}</td>
 			    <td>{{ party.country }}</td>
 			  </tr>
@@ -132,12 +130,17 @@
 
 {% block extra_js %}
 <script src="http://d3js.org/d3.v3.min.js"></script>
+  <script src="{% static 'sankey.js' %}"></script>
+  <script src="{% static 'legend.js' %}"></script>
 <script>
-var units = "Widgets";
+
+
+
+var units = "";
 
 var margin = {top: 10, right: 10, bottom: 10, left: 10},
-    width = 1110 - margin.left - margin.right,
-    height = 400 - margin.top - margin.bottom;
+    width = 320 - margin.left - margin.right,
+    height = 320 - margin.top - margin.bottom;
 
 var formatNumber = d3.format(",.0f"),    // zero decimal places
     format = function(d) { return formatNumber(d) + " " + units; },
@@ -150,7 +153,7 @@ var formatNumber = d3.format(",.0f"),    // zero decimal places
 ////////////////////
 var force = d3.layout.force()
     .charge(-120)
-    .linkDistance(100)
+    .linkDistance(50)
     .size([width, height]);
 
 
@@ -204,19 +207,7 @@ d3.json("/get/holding/graph/", function(error, graph) {
         .attr("cy", function(d) { return d.y; });
   });
 
- verticalLegend = d3.svg.legend()
-   .labelFormat("none").cellPadding(5)
-   .orientation("vertical")
-   .units("Role")
-   .cellWidth(25)
-   .cellHeight(18)
-   .inputScale(color)
-   .cellStepping(10);
 
-  graphsvg.append("g")
-    .attr("transform", "translate(50,140)")
-    .attr("class", "legend")
-    .call(verticalLegend);
 });
 
 function mouseover() {
@@ -230,5 +221,103 @@ function mouseout() {
   .duration(350)
   .attr("r" , 15);
 }
+
+////////////
+// SANKEY //
+////////////
+// append the svg canvas to the page (sankey)
+var margin = {top: 10, right: 10, bottom: 10, left: 10},
+    width = 700 - margin.left - margin.right,
+    height = 300 - margin.top - margin.bottom;
+
+
+var svg = d3.select("#chart").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", 
+          "translate(" + margin.left + "," + margin.top + ")");
+
+// Set the sankey diagram properties
+var sankey = d3.sankey()
+    .nodeWidth(36)
+    .nodePadding(48)
+    .size([width, height]);
+
+var path = sankey.link();
+
+// load the data
+d3.json("/get/sankey/full/", function(error, graph) {
+
+  sankey
+      .nodes(graph.nodes)
+      .links(graph.links)
+      .layout(32);
+
+// add in the links
+  var sankeylink = svg.append("g").selectAll(".link")
+      .data(graph.links)
+    .enter().append("path")
+      .attr("class", "link")
+      .attr("d", path)
+      .style("stroke-width", function(d) { return Math.max(1, d.dy); })
+      .sort(function(a, b) { return b.dy - a.dy; });
+
+// add the link titles
+  sankeylink.append("title")
+        .text(function(d) {
+        return d.source.name + " → " + 
+                d.target.name + "\n" + d.security; });
+
+// add in the nodes
+  var sankeynode = svg.append("g").selectAll(".node")
+      .data(graph.nodes)
+    .enter().append("g")
+      .attr("class", "node")
+      .attr("transform", function(d) { 
+      return "translate(" + d.x + "," + d.y + ")"; })
+      .call(d3.behavior.drag()
+      .origin(function(d) { return d; })
+      .on("dragstart", function() { 
+        this.parentNode.appendChild(this); })
+        .on("drag", dragmove));
+
+// add the rectangles for the nodes
+   sankeynode.append("rect")
+      .attr("height", function(d) { return d.dy; })
+      .attr("width", sankey.nodeWidth())
+      .style("fill", function(d) { 
+      return d.color = sankeycolor(d.name.replace(/ .*/, "")); })
+      //return d.color = color(d.group); })
+      .style("stroke", function(d) { 
+      return d3.rgb(d.color).darker(2); })
+    .append("title")
+      .text(function(d) { 
+      return d.name + "\n" + format(d.value); });
+
+  
+
+// add in the title for the nodes
+  sankeynode.append("text")
+      .attr("x", -6)
+      .attr("y", function(d) { return d.dy / 2; })
+      .attr("dy", ".35em")
+      .attr("text-anchor", "end")
+      .attr("transform", null)
+      .text(function(d) { return d.name.substr(0, 10) + " ..."; })
+    .filter(function(d) { return d.x < width / 2; })
+      .attr("x", 6 + sankey.nodeWidth())
+      .attr("text-anchor", "start");
+
+// the function for moving the nodes
+  function dragmove(d) {
+    d3.select(this).attr("transform", 
+        "translate(" + d.x + "," + (
+                d.y = Math.max(0, Math.min(height - d.dy, d3.event.y))
+            ) + ")");
+    sankey.relayout();
+    sankeylink.attr("d", path);
+  }
+});
 </script>
 {% endblock %}
