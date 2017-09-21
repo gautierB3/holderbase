@@ -96,7 +96,8 @@ var margin = {top: 10, right: 10, bottom: 10, left: 10},
 
 var formatNumber = d3.format(",.0f"),    // zero decimal places
     format = function(d) { return formatNumber(d) + " " + units; },
-    color = d3.scale.category20(),
+    CategoricalData = ["ISS","CSD", "CUS", "OWN"],
+      color = d3.scale.category20().domain(CategoricalData),
     sankeycolor = d3.scale.category20();
 
 

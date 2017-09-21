@@ -87,7 +87,7 @@ def index(request):
                 messages.add_message(request, messages.INFO, 'Sender and timestamp succesfully updated.', extra_tags='success')
         created, updated, removed = Holding.check_for_updates(sender, hash, timestamp)
         return render(request, 'holderbase/success.html', {"created":created, "updated":updated, "removed":removed})
-    context = {"parties":Party.objects.all(), "securities":Security.objects.all(), "holdings":Holding.objects.all()}
+    context = {"parties":Party.objects.all(), "securities":Security.objects.all(), "holdings":Holding.objects.filter(removed=None)}
     return render(request, 'index.html', context)
 
 

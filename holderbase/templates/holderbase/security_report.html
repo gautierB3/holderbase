@@ -151,6 +151,8 @@
     //console.log("stackedData:",stackedData);
 
     xscale.domain(stackedData.map(function(d) { return d.target; }));
+    xscale.rangeRound([0, width/1.5]);
+
     yscale.domain([0, Math.max.apply(Math, totals)]);
     
     target_group_chart.selectAll(".serie")
@@ -218,13 +220,13 @@
     //console.log("data:", data);
     var dataset = [];
     for (obj in data) {
-      if (data[obj]['role_source'] == 'CSD' && !(data[obj]['role_target'] == 'PPP')) {
+      if (data[obj]['role_source'] == 'CUS') {
         dataset.push(data[obj]);
       };
     };
     //console.log("dataset:", dataset);
 
-    var targets = groupBy(dataset, 'target');
+    var targets = groupBy(dataset, 'source');
 
     //console.log("targets:", targets);
 
@@ -259,6 +261,7 @@
     //console.log("stackedData:",stackedData);
 
     xscale.domain(stackedData.map(function(d) { return d.target; }));
+    xscale.rangeRound([0, width/1.5]);
     yscale.domain([0, Math.max.apply(Math, totals1)]);
     
     target_country_group_chart.selectAll(".serie")

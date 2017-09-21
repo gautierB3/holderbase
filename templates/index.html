@@ -3,6 +3,14 @@
 {% block extra_head %}
  <style>
 
+ #graph {
+   border-style: solid;
+   border-width: 1px;
+   margin-top: 20px;
+   margin-bottom: 20px;
+   border-color: grey;
+ }
+
 .link {
   fill: none;
   stroke: #000;
@@ -13,6 +21,19 @@
   stroke-opacity: .5;
 }
 
+.node rect {
+        cursor: move;
+        fill:blue;
+        stroke:pink;
+        stroke-width:1;
+        fill-opacity:0.8;
+        stroke-opacity:0.1;
+        shape-rendering: crispEdges;
+      }
+
+.legend rect {
+        stroke:white !important;
+        opacity:0.8;}
 
 </style>
 
@@ -39,13 +60,15 @@
          <h4 class="card-title">{{ holdings|length }} <small>Holding{{ holdings|pluralize }}</small></h4>
          </div>
       </div>
-      <div class="col-sm-4">
-        <div id="graph"></div>
-	    </div>
-      <div id="chart" class="col-sm-8">
-		    
-      </div>
+      <div id="graph" class="col-sm-12"></div>
+      <div id="chart" class="col-sm-12"></div>
       </section>
+      <hr>
+    </main>
+  </div>
+</div>
+<div class="container">
+  <div class="row">
 	  {% if parties %}
       <section id="parties">
       <div class="row">
@@ -55,7 +78,7 @@
 		  <table class="table">
 		    <tr>
 			    <th>Name</th>
-			    <th>Lei</th>
+			    <th>LEI</th>
 			    <th>Holder role</th>
 			    <th>Sector/Industry</th>
 			    <th>Country</th>
@@ -123,7 +146,6 @@
 		</div>
       </section>
 	  {% endif %}
-    </main>
   </div>
 </div>
 {% endblock %}
@@ -135,100 +157,124 @@
 <script>
 
 
-
 var units = "";
-
-var margin = {top: 10, right: 10, bottom: 10, left: 10},
-    width = 320 - margin.left - margin.right,
-    height = 320 - margin.top - margin.bottom;
-
 var formatNumber = d3.format(",.0f"),    // zero decimal places
-    format = function(d) { return formatNumber(d) + " " + units; },
-    color = d3.scale.category20(),
-    sankeycolor = d3.scale.category20();
+      format = function(d) { return formatNumber(d) + " " + units; },
+      color = d3.scale.category20();
 
+$( document ).ready(function() {
 
-////////////////////
-// Directed graph //
-////////////////////
-var force = d3.layout.force()
-    .charge(-120)
-    .linkDistance(50)
-    .size([width, height]);
+  var margin = {top: 10, right: 10, bottom: 10, left: 10},
+      width = $("#graph").width(); - margin.left - margin.right,
+      height = 320 - margin.top - margin.bottom;
 
-
-var graphsvg = d3.select("#graph").append("svg")
-    .attr("width", width)
-    .attr("height", height);
-
-
-d3.json("/get/holding/graph/", function(error, graph) {
-  if (error) throw error;
-
-  force
-      .nodes(graph.nodes)
-      .links(graph.links)
-      .start();
+  var formatNumber = d3.format(",.0f"),    // zero decimal places
+      format = function(d) { return formatNumber(d) + " " + units; },
+      CategoricalData = ["ISS","CSD", "CUS", "OWN"],
+      color = d3.scale.category20().domain(CategoricalData);
 
 
 
-  var link = graphsvg.selectAll(".link")
-      .data(graph.links)
-    .enter().append("line")
-      .attr("class", "link")
-      .style("stroke-width", 2);
-      //.style("stroke-width", function(d) { return Math.sqrt(d.value); });
-
-  // add the link titles
-  link.append("title")
-        .text(function(d) {
-        return d.source.name + " → " + 
-                d.target.name + "\n" + format(d.amount); });
-
-  var node = graphsvg.selectAll(".node")
-      .data(graph.nodes)
-    .enter().append("circle")
-      .attr("class", "node")
-      .attr("r", 10)
-      .style("fill", function(d) { return color(d.group); })
-      .call(force.drag);
+  ////////////////////
+  // Directed graph //
+  ////////////////////
+  var force = d3.layout.force()
+      .charge(-120)
+      .linkDistance(50)
+      .size([width, height]);
 
 
-  node.append("title")
-      .text(function(d) { return d.name; });
+  var graphsvg = d3.select("#graph").append("svg")
+      .attr("width", width)
+      .attr("height", height);
 
-  force.on("tick", function() {
-    link.attr("x1", function(d) { return d.source.x; })
-        .attr("y1", function(d) { return d.source.y; })
-        .attr("x2", function(d) { return d.target.x; })
-        .attr("y2", function(d) { return d.target.y; });
 
-    node.attr("cx", function(d) { return d.x; })
-        .attr("cy", function(d) { return d.y; });
+  d3.json("/get/holding/graph/", function(error, graph) {
+    if (error) throw error;
+
+    force
+        .nodes(graph.nodes)
+        .links(graph.links)
+        .start();
+
+
+
+    var link = graphsvg.selectAll(".link")
+        .data(graph.links)
+      .enter().append("line")
+        .attr("class", "link")
+        .style("stroke-width", 1);
+        //.style("stroke-width", function(d) { return Math.sqrt(d.value); });
+
+    // add the link titles
+    link.append("title")
+          .text(function(d) {
+          return d.source.name + " → " + 
+                  d.target.name + "\n" + format(d.amount); });
+
+    var node = graphsvg.selectAll(".node")
+        .data(graph.nodes)
+      .enter().append("circle")
+        .attr("class", "node")
+        .attr("r", 5)
+        .style("fill", function(d) { return color(d.group); })
+        .call(force.drag);
+
+
+    node.append("title")
+        .text(function(d) { return d.name; });
+
+    force.on("tick", function() {
+      link.attr("x1", function(d) { return d.source.x; })
+          .attr("y1", function(d) { return d.source.y; })
+          .attr("x2", function(d) { return d.target.x; })
+          .attr("y2", function(d) { return d.target.y; });
+
+      node.attr("cx", function(d) { return d.x; })
+          .attr("cy", function(d) { return d.y; });
+    });
+
+    verticalLegend = d3.svg.legend()
+     .labelFormat("none").cellPadding(5)
+     .orientation("vertical")
+     .units("Role")
+     .cellWidth(25)
+     .cellHeight(18)
+     .inputScale(color)
+     .cellStepping(10);
+
+    graphsvg.append("g")
+      .attr("transform", "translate(50,140)")
+      .attr("class", "legend")
+      .attr("data-legend-pos", ['ISS','CSD','CUS','OWN'])
+      .call(verticalLegend);
+
+
   });
+
+  function mouseover() {
+    d3.select(this).select("circle").transition()
+    .duration(350)
+    .attr("r", 20);
+  }
+
+  function mouseout() {
+    d3.select(this).select("circle").transition()
+    .duration(350)
+    .attr("r" , 15);
+  }
 
 
 });
-
-function mouseover() {
-  d3.select(this).select("circle").transition()
-  .duration(350)
-  .attr("r", 20);
-}
-
-function mouseout() {
-  d3.select(this).select("circle").transition()
-  .duration(350)
-  .attr("r" , 15);
-}
 
 ////////////
 // SANKEY //
 ////////////
 // append the svg canvas to the page (sankey)
 var margin = {top: 10, right: 10, bottom: 10, left: 10},
-    width = 700 - margin.left - margin.right,
-    height = 300 - margin.top - margin.bottom;
+    width = 1100 - margin.left - margin.right,
+    height = 300 - margin.top - margin.bottom,
+      sankeycolor = d3.scale.category20();
 
 
 var svg = d3.select("#chart").append("svg")
@@ -245,6 +291,8 @@ var sankey = d3.sankey()
     .size([width, height]);
 
 var path = sankey.link();
+
+
 
 // load the data
 d3.json("/get/sankey/full/", function(error, graph) {
@@ -319,5 +367,7 @@ d3.json("/get/sankey/full/", function(error, graph) {
     sankeylink.attr("d", path);
   }
 });
+
+
 </script>
 {% endblock %}
