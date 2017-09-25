@@ -89,7 +89,7 @@
 			    <td>{{ party.lei }}</td>
 			    <td>{{ party.get_role }}</td>
 			    <td>{% if party.sector_industry %}{{ party.sector_industry }}{% else %}Unknown{% endif %}</td>
-			    <td>{{ party.country }}</td>
+			    <td>{{ party.country.name }}</td>
 			  </tr>
 			  {% endfor %}
 		  </table>
