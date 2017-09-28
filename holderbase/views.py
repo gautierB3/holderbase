@@ -3,6 +3,7 @@ import os
 
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from django.core.files.storage import FileSystemStorage
 from django.http import HttpResponseRedirect, JsonResponse
@@ -22,6 +23,7 @@ from .processors import (Dataset,
 
 from django.core.files.storage import FileSystemStorage
 
+@login_required(login_url='/account/login/')
 def index(request):
     """
     The index page. 
@@ -99,15 +101,16 @@ def index(request):
 #     for typ in party_types:
 #         dataset.append({'label': typ, 'count': Party.objects.filter(company_type=typ).count()})
 #     return JsonResponse(dataset, safe=False)
-
+@login_required(login_url='/account/login/')
 # Used for the pivot: /pivot/
 def party_pivot(request):
     return JsonResponse(Party.get_json_obs(), safe=False)
-
+@login_required(login_url='/account/login/')
 # used for the global graph: /graph/
 def get_holding_graph(request):
     return JsonResponse(Holding.get_indexed_graph_dict(), safe=False)
 
+@login_required(login_url='/account/login/')
 # Security report view
 def security_report(request, pk):
     template = "holderbase/security_report.html"
@@ -122,6 +125,7 @@ def security_report(request, pk):
     context = {'pk':pk, 'obj':obj}
     return render(request, template, context)
 
+@login_required(login_url='/account/login/')
 def issuer_report(request, pk):
     template = "holderbase/issuer_report.html"
     # security = {
@@ -135,11 +139,11 @@ def issuer_report(request, pk):
     context = {'pk':pk, 'obj':obj}
     return render(request, template, context)
 
-
+@login_required(login_url='/account/login/')
 def get_indexed_graph(request, pk):
     return JsonResponse(Holding.get_indexed_graph_dict(security=pk), safe=False)
 
-
+@login_required(login_url='/account/login/')
 def get_sankey(request, pk):
     data = Holding.get_indexed_graph_dict(security=pk)
     # for node in data['nodes']:
@@ -157,6 +161,7 @@ def get_sankey(request, pk):
             data['links'].remove(item)
     return JsonResponse(data, safe=False)
 
+@login_required(login_url='/account/login/')
 def get_full_sankey(request):
     data = Holding.get_indexed_graph_dict()
     #for node in data['nodes']:
@@ -182,6 +187,7 @@ def get_full_sankey(request):
 #     return JsonResponse(data, safe=False)
 
 #used in security report for graph
+@login_required(login_url='/account/login/')
 def get_security_graph(request, pk):
     return JsonResponse(Holding.get_graph_dict(security=pk), safe=False)
 
@@ -223,6 +229,7 @@ def get_security_graph(request, pk):
     # return JsonResponse(master_data, safe=False)
 
 #used in security report for second and third chart
+@login_required(login_url='/account/login/')
 def get_full_data(request, pk):
     data = Holding.get_full_table(security=pk)
     return JsonResponse(data, safe=False)

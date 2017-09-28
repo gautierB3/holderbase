@@ -27,6 +27,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+LOGIN_REDIRECT_URL = 'index'
+
 
 # Application definition
 
@@ -41,6 +43,7 @@ INSTALLED_APPS = [
     'django_countries',
     # Local apps
     'holderbase.apps.HolderbaseConfig',
+    'account.apps.AccountConfig',
 ]
 
 MIDDLEWARE = [

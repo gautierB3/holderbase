@@ -231,21 +231,28 @@ $( document ).ready(function() {
           .attr("cy", function(d) { return d.y; });
     });
 
-    verticalLegend = d3.svg.legend()
-     .labelFormat("none").cellPadding(5)
-     .orientation("vertical")
-     .units("Role")
-     .cellWidth(25)
-     .cellHeight(18)
-     .inputScale(color)
-     .cellStepping(10);
+    if (graph.length > 0) {
 
-    graphsvg.append("g")
-      .attr("transform", "translate(50,140)")
-      .attr("class", "legend")
-      .attr("data-legend-pos", ['ISS','CSD','CUS','OWN'])
-      .call(verticalLegend);
 
+
+      verticalLegend = d3.svg.legend()
+       .labelFormat("none").cellPadding(5)
+       .orientation("vertical")
+       .units("Role")
+       .cellWidth(25)
+       .cellHeight(18)
+       .inputScale(color)
+       .cellStepping(10);
+
+      graphsvg.append("g")
+        .attr("transform", "translate(50,140)")
+        .attr("class", "legend")
+        .attr("data-legend-pos", ['ISS','CSD','CUS','OWN'])
+        .call(verticalLegend);
+
+    } else {
+      $('#graph').append("<h3>Nothing much to see here right now.</h3>")
+    }
 
   });
 

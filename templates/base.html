@@ -51,9 +51,12 @@
           </li> -->
         </ul>
         <!-- Button trigger modal -->
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#exampleModal" style="margin-right: 10px;">
           Upload file
         </button>
+        {% if user.is_authenticated %}
+        <a href="/account/logout/" class="btn btn-outline-danger btn-sm">Log out</a>
+        {% endif %}
       </div>
     </nav>
 
