@@ -163,7 +163,7 @@ $( document ).ready(function() {
 
   var margin = {top: 10, right: 10, bottom: 10, left: 10},
       width = $("#graph").width(); - margin.left - margin.right,
-      height = 320 - margin.top - margin.bottom;
+      height = 420 - margin.top - margin.bottom;
 
   var formatNumber = d3.format(",.0f"),    // zero decimal places
       format = function(d) { return formatNumber(d) + " " + units; },
@@ -231,7 +231,7 @@ $( document ).ready(function() {
           .attr("cy", function(d) { return d.y; });
     });
 
-    if (graph.length > 0) {
+    if (graph.links.length > 0) {
 
 
 
@@ -291,7 +291,7 @@ var svg = d3.select("#chart").append("svg")
 // Set the sankey diagram properties
 var sankey = d3.sankey()
     .nodeWidth(36)
-    .nodePadding(48)
+    .nodePadding(40)
     .size([width, height]);
 
 var path = sankey.link();

@@ -27,6 +27,8 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['denisverm.pythonanywhere.com', 'gautierb3.pythonanywhere.com', 'www.holderbase.com']
 
+LOGIN_REDIRECT_URL = 'index'
+
 
 # Application definition
 
@@ -41,6 +43,7 @@ INSTALLED_APPS = [
     'django_countries',
     # Local apps
     'holderbase.apps.HolderbaseConfig',
+    'account.apps.AccountConfig',
 ]
 
 MIDDLEWARE = [
