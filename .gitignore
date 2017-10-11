@@ -102,3 +102,4 @@ env/
 migrations/
 fixtures/
 static/
+frontend/

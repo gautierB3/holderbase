@@ -468,7 +468,7 @@ class Holding(models.Model):
 
 
     @classmethod
-    def dump_graph_json(cls, path="media/dumps/grap.json"):
+    def dump_graph_json(cls, path="media/dumps/graph.json"):
         """
         Dumps data to file
         """
