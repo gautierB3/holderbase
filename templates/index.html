@@ -298,7 +298,7 @@ $( document ).ready(function() {
 // append the svg canvas to the page (sankey)
 var margin = {top: 30, right: 0, bottom: 30, left: 0},
     width = 1100 - margin.left - margin.right,
-    height = 420 - margin.top - margin.bottom,
+    height = 460 - margin.top - margin.bottom,
       sankeycolor = d3.scale.category20();
 
 
@@ -312,7 +312,7 @@ var svg = d3.select("#chart").append("svg")
 // Set the sankey diagram properties
 var sankey = d3.sankey()
     .nodeWidth(36)
-    .nodePadding(40)
+    .nodePadding(5)
     .size([width, height]);
 
 var path = sankey.link();
