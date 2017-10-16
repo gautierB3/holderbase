@@ -195,7 +195,8 @@ def create_or_update_holdings(sender, timestamp, holdings_list, hash):
             name__exact = row['name'],
             defaults = {
                 'lei': row['lei'], 
-                "name":row['name'],
+                "name":row['name'], 
+                "country":row['country'], 
                 "original_id":row['id']
             }
         )
