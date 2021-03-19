@@ -7,7 +7,7 @@ django-countries==4.6.1
 docutils==0.14
 idna==2.6
 imagesize==0.7.1
-Jinja2==2.9.6
+Jinja2==2.11.3
 MarkupSafe==1.0
 numpy==1.13.1
 pandas==0.20.3
